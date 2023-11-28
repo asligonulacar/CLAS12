@@ -19,7 +19,7 @@
 using namespace clas12; 
 // Generalise what to add to tree-> Could have a file that initialises the tree before the macro is run.
 // This class should contain all functions needed to perform the Energy Corrections for the Forward Tagger.
-
+// Understood why slurm isn't working: Will's code is passing on a list of runs to the code, not a list of HIPO files.
 // Preliminary Electron correction from Geraint's calculations. Needs to be calculated again for pass 2 data.
 TLorentzVector  Correct_Electron(TLorentzVector x){
 
@@ -75,23 +75,6 @@ Double_t Correct_Phi(TLorentzVector e){
   Corect_Ph = e.Phi() + Ph_cor;
 
   return Corect_Ph;
-}
-// Function to do fiducial cuts.
-void FidCuts(int part_DC_sector, Double_t part_DC_c1x, Double_t part_DC_c1y, Double_t part_DC_c1z, Double_t part_DC_c2x, Double_t part_DC_c2y, Double_t part_DC_c2z, Double_t part_DC_c3x, Double_t part_DC_c3y, Double_t part_DC_c3z, Int_t part_pid, bool outbending){
-  
-  while(false==outbending){
-         if(!DC_fiducial_cut_theta_phi(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector,1) ||
-            !DC_fiducial_cut_theta_phi(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector,2) ||
-            !DC_fiducial_cut_theta_phi(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector,3)) continue;
-         }
-         
-      
-  while(true==outbending){
-         if(!DC_fiducial_cut_XY(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector,1) &&
-            !DC_fiducial_cut_XY(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector,2) &&
-            !DC_fiducial_cut_XY(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector,3)) continue;
-         }
-          
 }
 // Generalised function to get hipo files from runs and do the cuts.
 // FilePath: Directory of the runs.
@@ -197,7 +180,18 @@ void MMall_Slurm(TString infile, TString outfile){
       int part_DC_sector_pip = determineSector(part_DC_c2x, part_DC_c2y,part_DC_c2z);
 
       // Fiducial cuts for inbending or outbending data, based on user input.
-      FidCuts(part_DC_sector_pip, part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z,  part_pid, true);
+     if(false==outbending){
+         if(!DC_fiducial_cut_theta_phi(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector_pip,1) ||
+            !DC_fiducial_cut_theta_phi(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector_pip,2) ||
+            !DC_fiducial_cut_theta_phi(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector_pip,3)) continue;
+         }
+         
+      
+     else if(true==outbending){
+         if(!DC_fiducial_cut_XY(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector_pip,1) &&
+            !DC_fiducial_cut_XY(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector_pip,2) &&
+            !DC_fiducial_cut_XY(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector_pip,3)) continue;
+         }
         //pi^-.
       if(piminus[0]->traj(DC,6)->getDetector() == 6 && piminus[0]->traj(DC,6)->getLayer() == 6){
         part_DC_c1x = piminus[0]->traj(DC,6)->getX();
@@ -220,7 +214,19 @@ void MMall_Slurm(TString infile, TString outfile){
       // Fiducial cuts for pi^-.
       int part_DC_sector_pim = determineSector(part_DC_c2x, part_DC_c2y,part_DC_c2z);
 
-      FidCuts(part_DC_sector_pim, part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z,  part_pid, true);
+      // Fiducial cuts for inbending or outbending data, based on user input.
+     if(false==outbending){
+         if(!DC_fiducial_cut_theta_phi(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector_pim,1) ||
+            !DC_fiducial_cut_theta_phi(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector_pim,2) ||
+            !DC_fiducial_cut_theta_phi(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector_pim,3)) continue;
+         }
+         
+      
+     else if(true==outbending){
+         if(!DC_fiducial_cut_XY(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector_pim,1) &&
+            !DC_fiducial_cut_XY(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector_pim,2) &&
+            !DC_fiducial_cut_XY(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector_pim,3)) continue;
+         }
       // Proton fiducial cut.
       if(proton[0]->traj(DC,6)->getDetector() == 6 && proton[0]->traj(DC,6)->getLayer() == 6){
         part_DC_c1x = proton[0]->traj(DC,6)->getX();
@@ -242,9 +248,21 @@ void MMall_Slurm(TString infile, TString outfile){
       part_pid = 2212;
       int part_DC_sector_pr = determineSector(part_DC_c2x, part_DC_c2y,part_DC_c2z);
 
-      FidCuts(part_DC_sector_pr, part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, true);
+       // Fiducial cuts for inbending or outbending data, based on user input.
+     if(false==outbending){
+         if(!DC_fiducial_cut_theta_phi(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector_pr,1) ||
+            !DC_fiducial_cut_theta_phi(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector_pr,2) ||
+            !DC_fiducial_cut_theta_phi(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector_pr,3)) continue;
+         }
+         
+      
+     else if(true==outbending){
+         if(!DC_fiducial_cut_XY(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector_pr,1) &&
+            !DC_fiducial_cut_XY(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector_pr,2) &&
+            !DC_fiducial_cut_XY(part_DC_c1x, part_DC_c1y, part_DC_c1z, part_DC_c2x, part_DC_c2y, part_DC_c2z, part_DC_c3x, part_DC_c3y, part_DC_c3z, part_pid, part_DC_sector_pr,3)) continue;
+         }
 
-      while(TMath::RadToDeg()*el.Theta() > 2.5 && TMath::RadToDeg()*el.Theta() < 4.5){
+      if(TMath::RadToDeg()*el.Theta() > 2.5 && TMath::RadToDeg()*el.Theta() < 4.5){
          miss_all = beam + target - el - pip - pim - pr;
          miss_all_m2.push_back(miss_all.M2());
          Tree->Fill();
